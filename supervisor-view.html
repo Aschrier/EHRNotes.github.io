@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClearNote — Supervisor</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f4f6f9;
+    --white: #ffffff;
+    --border: #dde1ea;
+    --blue: #2563eb;
+    --blue-light: #eff4ff;
+    --blue-border: #bfcfff;
+    --red: #dc2626;
+    --red-light: #fff0f0;
+    --red-border: #fca5a5;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --text: #1e2330;
+    --text2: #4b5563;
+    --text3: #9ca3af;
+    --shadow: 0 1px 4px rgba(0,0,0,0.07);
+  }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Merriweather', serif;
+    font-size: 18px;
+    color: var(--blue);
+    font-weight: 700;
+  }
+
+  .supervisor-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: #fef9c3;
+    border: 1px solid #fde047;
+    color: #92400e;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: #7c3aed;
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* LAYOUT */
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  /* SIDEBAR - INBOX */
+  .inbox-panel {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: #fafbfc;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-title {
+    font-family: 'Merriweather', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--blue);
+    color: white;
+  }
+
+  .inbox-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .inbox-item:hover { background: var(--blue-light); }
+  .inbox-item.active { background: var(--blue-light); border-left: 3px solid var(--blue); }
+  .inbox-item.unread { border-left: 3px solid var(--blue); }
+
+  .inbox-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .inbox-from {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .tiny-avatar {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .inbox-time { font-size: 11px; color: var(--text3); }
+  .inbox-preview { font-size: 12px; color: var(--text2); line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .urgent-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); display: inline-block; margin-right: 4px; }
+  .normal-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 4px; }
+
+  /* MAIN REVIEW PANEL */
+  .review-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: fadeUp 0.35s ease 0.1s both;
+  }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: #fafbfc;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-title {
+    font-family: 'Merriweather', serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-body { padding: 16px 18px; }
+
+  .urgent-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--red-light);
+    border: 1px solid var(--red-border);
+    color: var(--red);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .normal-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--green-light);
+    border: 1px solid #bbf7d0;
+    color: var(--green);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .from-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    background: var(--bg);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .from-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+  }
+  .from-name { font-weight: 700; color: var(--text); font-size: 14px; }
+  .from-meta { font-size: 12px; color: var(--text3); }
+
+  /* TRANSCRIPT IN SUPERVISOR VIEW */
+  .transcript-scroll {
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .transcript-scroll::-webkit-scrollbar { width: 4px; }
+  .transcript-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .t-block { margin-bottom: 14px; }
+  .t-time { font-size: 11px; color: var(--text3); font-weight: 700; margin-bottom: 5px; }
+  .t-text { font-size: 13.5px; line-height: 1.75; color: var(--text2); }
+
+  .flagged-moment {
+    background: #fef9c3;
+    border: 1px solid #fde047;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 10px 0;
+  }
+  .flagged-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #92400e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .flagged-text { font-size: 13px; color: var(--text2); line-height: 1.65; font-style: italic; }
+  .flagged-note {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #fde047;
+    font-size: 12.5px;
+    color: var(--text2);
+  }
+  .flagged-note strong { color: var(--text); }
+
+  /* PRACTITIONER NOTES */
+  .notes-block {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 13.5px;
+    line-height: 1.8;
+    color: var(--text2);
+    white-space: pre-wrap;
+  }
+
+  /* REPLY */
+  .reply-textarea {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13.5px;
+    font-family: 'Lato', sans-serif;
+    line-height: 1.7;
+    resize: none;
+    min-height: 100px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+    margin-bottom: 10px;
+  }
+  .reply-textarea:focus { border-color: var(--blue); }
+  .reply-textarea::placeholder { color: var(--text3); }
+
+  .reply-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Lato', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .btn-blue { background: var(--blue); color: white; }
+  .btn-blue:hover { background: #1d4ed8; }
+  .btn-outline { background: white; border: 1px solid var(--border); color: var(--text2); }
+  .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+  .btn-red { background: var(--red); color: white; }
+  .btn-red:hover { background: #b91c1c; }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+  /* CHAT */
+  .chat-box {
+    border: 2px solid var(--red-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .chat-header {
+    background: var(--red);
+    color: white;
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chat-messages {
+    padding: 12px 14px;
+    min-height: 90px;
+    max-height: 150px;
+    overflow-y: auto;
+    background: white;
+  }
+  .chat-msg { margin-bottom: 10px; font-size: 13px; line-height: 1.6; }
+  .chat-msg .who { font-weight: 700; color: var(--text); font-size: 12px; margin-bottom: 2px; }
+  .chat-msg .msg-text { color: var(--text2); }
+  .chat-msg.mine .who { color: var(--blue); }
+  .chat-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--red-border);
+    background: white;
+  }
+  .chat-input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 13px;
+    font-family: 'Lato', sans-serif;
+    outline: none;
+  }
+  .chat-input:focus { border-color: var(--blue); }
+
+  .divider {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin: 6px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">ClearNote</div>
+  <div class="supervisor-badge">⭐ Supervisor View</div>
+  <div class="topbar-user">
+    <div class="avatar">MW</div>
+    Dr. M. Webb
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- INBOX SIDEBAR -->
+  <div class="inbox-panel">
+    <div class="panel-header">
+      <div class="panel-title">Inbox</div>
+      <div class="badge">3</div>
+    </div>
+
+    <div class="inbox-item active unread">
+      <div class="inbox-top">
+        <div class="inbox-from">
+          <div class="tiny-avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c3aed)">SR</div>
+          Dr. S. Rivera
+        </div>
+        <div class="inbox-time">2:31 PM</div>
+      </div>
+      <div class="inbox-preview"><span class="urgent-dot"></span>Job security — tone shifted fast</div>
+    </div>
+
+    <div class="inbox-item unread">
+      <div class="inbox-top">
+        <div class="inbox-from">
+          <div class="tiny-avatar" style="background:linear-gradient(135deg,#22c55e,#4f8ef7)">AT</div>
+          Dr. A. Torres
+        </div>
+        <div class="inbox-time">10:14 AM</div>
+      </div>
+      <div class="inbox-preview"><span class="normal-dot"></span>SSRI partial response after 8wks</div>
+    </div>
+
+    <div class="inbox-item unread">
+      <div class="inbox-top">
+        <div class="inbox-from">
+          <div class="tiny-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">JK</div>
+          Dr. J. Kim
+        </div>
+        <div class="inbox-time">Yesterday</div>
+      </div>
+      <div class="inbox-preview"><span class="urgent-dot"></span>"What's the point anyway..."</div>
+    </div>
+
+    <div class="inbox-item">
+      <div class="inbox-top">
+        <div class="inbox-from">
+          <div class="tiny-avatar" style="background:linear-gradient(135deg,#a78bfa,#f472b6)">PL</div>
+          Dr. P. Lin
+        </div>
+        <div class="inbox-time">Mon</div>
+      </div>
+      <div class="inbox-preview"><span class="normal-dot"></span>Patient #3302 missed 2nd session</div>
+    </div>
+
+  </div>
+
+  <!-- REVIEW PANEL -->
+  <div class="review-panel">
+
+    <!-- WHO SENT THIS -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          Review: Dr. S. Rivera — Patient #4821
+          <span class="urgent-badge">🔴 Urgent</span>
+        </div>
+        <div style="font-size:12px;color:var(--text3)">Today 2:31 PM</div>
+      </div>
+      <div class="card-body">
+        <div class="from-row">
+          <div class="from-avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c3aed)">SR</div>
+          <div>
+            <div class="from-name">Dr. Sofia Rivera</div>
+            <div class="from-meta">NP · 3 years with practice · Patient #4821 — Session #14</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRANSCRIPT -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Session Transcript</div>
+        <span style="font-size:12px;color:var(--text3)">Today 2:14 PM · 31 min</span>
+      </div>
+      <div class="card-body">
+        <div class="transcript-scroll">
+
+          <div class="t-block">
+            <div class="t-time">0:00 — 0:43</div>
+            <div class="t-text">Patient arrived on time and appeared well-groomed. Reported feeling "a bit better" compared to last session but noted difficulty sleeping for the past two weeks. States going to bed around midnight but waking at 3–4 AM.</div>
+          </div>
+
+          <div class="flagged-moment">
+            <div class="flagged-label">🚩 Flagged Moment — 0:44</div>
+            <div class="flagged-text">"...expressed concern about job security. Tone shifted significantly at this point. Patient became visibly tense when discussing the new manager."</div>
+            <div class="flagged-note"><strong>Rivera's note:</strong> Patient became visibly tense here. Not sure if this warrants a plan adjustment or just monitoring. Flagging for Dr. Webb.</div>
+          </div>
+
+          <div class="t-block">
+            <div class="t-time">1:53 — 2:31</div>
+            <div class="t-text">Medication review: patient confirms taking sertraline 100mg daily. Denies side effects. Reports it "takes the edge off." Plan to continue current regimen and reassess at next visit.</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- PRACTITIONER NOTES -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Rivera's Session Notes</div>
+      </div>
+      <div class="card-body">
+        <div class="notes-block">Patient #4821 — 5/24/26
+
+Presenting concerns: sleep disruption (new, ~2 weeks), occupational stress related to new manager.
+
+Mental status: Alert, cooperative, mildly anxious affect. No SI/HI.
+
+Medications: Sertraline 100mg — compliant, no reported side effects.
+
+Assessment: Situational anxiety with sleep impact. Monitoring for escalation. Flagged job security comment for supervisor review.
+
+Plan: Continue current medication. Follow up in 2 weeks.</div>
+      </div>
+    </div>
+
+    <!-- REPLY -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Your Reply to Rivera</div>
+      </div>
+      <div class="card-body">
+
+        <div class="divider">Send a reply</div>
+
+        <textarea class="reply-textarea" placeholder="Type your guidance here — Rivera will see this in their Supervisor Replies panel...">Next session, ask explicitly: "How has this been affecting your sleep and mood day to day?" That keeps it clinical and opens the door without leading the patient.
+
+If the job anxiety escalates further, we may need to revisit the treatment plan. Keep me posted.</textarea>
+
+        <div class="reply-footer">
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-outline btn-sm">🟢 Not Urgent</button>
+            <button class="btn btn-red btn-sm">🔴 Mark Urgent</button>
+          </div>
+          <button class="btn btn-blue">Send Reply</button>
+        </div>
+
+        <div class="divider" style="margin-top:20px">Or start an urgent chat</div>
+
+        <div class="chat-box">
+          <div class="chat-header">🔴 Urgent Chat — Dr. S. Rivera</div>
+          <div class="chat-messages">
+            <div class="chat-msg">
+              <div class="who">Dr. S. Rivera</div>
+              <div class="msg-text">Session just ended. I wasn't sure how to redirect when he brought up the manager.</div>
+            </div>
+            <div class="chat-msg mine">
+              <div class="who">You</div>
+              <div class="msg-text">Next time try: "It sounds like work has been weighing on you — how has that been affecting your mood day to day?" Keeps it clinical and opens the door.</div>
+            </div>
+          </div>
+          <div class="chat-input-row">
+            <input class="chat-input" placeholder="Reply to Rivera..." type="text" />
+            <button class="btn btn-red btn-sm">Send</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
