@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClearNote — Daily Overview</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f4f6f9;
+    --white: #fff;
+    --border: #dde1ea;
+    --blue: #2563eb;
+    --blue-light: #eff4ff;
+    --blue-border: #bfcfff;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --text: #1e2330;
+    --text2: #4b5563;
+    --text3: #9ca3af;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.12);
+  }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  .topnav {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { font-family: 'Merriweather', serif; font-size: 17px; color: var(--blue); font-weight: 700; }
+  .topnav-center { font-family: 'Merriweather', serif; font-size: 15px; color: var(--text); font-weight: 700; }
+  .topnav-right { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text2); }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: #7c3aed; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .date-badge { font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: var(--blue-light); border: 1px solid var(--blue-border); color: var(--blue); }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+
+  .page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .page-title { font-family: 'Merriweather', serif; font-size: 20px; font-weight: 700; color: var(--text); }
+  .page-sub { font-size: 13px; color: var(--text3); margin-top: 3px; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .stat-num { font-size: 28px; font-weight: 700; color: var(--blue); font-family: 'Merriweather', serif; }
+  .stat-label { font-size: 12px; color: var(--text3); margin-top: 3px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; }
+
+  /* CLINICIAN SECTIONS */
+  .clinician-section {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    overflow: hidden;
+    animation: fadeUp 0.3s ease both;
+  }
+  .clinician-section:nth-child(2) { animation-delay: 0.05s; }
+  .clinician-section:nth-child(3) { animation-delay: 0.1s; }
+  .clinician-section:nth-child(4) { animation-delay: 0.15s; }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+  .clinician-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: #fafbfc;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .clinician-header:hover { background: var(--blue-light); }
+
+  .clin-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: white; flex-shrink: 0;
+  }
+  .clin-info { flex: 1; }
+  .clin-name { font-family: 'Merriweather', serif; font-size: 15px; font-weight: 700; color: var(--text); }
+  .clin-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+  .clin-stats { display: flex; gap: 16px; align-items: center; }
+  .clin-stat { text-align: center; }
+  .clin-stat .n { font-size: 18px; font-weight: 700; color: var(--blue); }
+  .clin-stat .l { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 700; }
+
+  .status-chip {
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+  }
+  .status-chip.session { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-border); }
+  .status-chip.done { background: var(--green-light); color: var(--green); border: 1px solid #bbf7d0; }
+  .status-chip.away { background: var(--bg); color: var(--text3); border: 1px solid var(--border); }
+
+  .chevron { font-size: 14px; color: var(--text3); transition: transform 0.2s; }
+  .chevron.open { transform: rotate(90deg); }
+
+  /* APT TABLE */
+  .apt-table { display: none; }
+  .apt-table.open { display: block; }
+
+  .apt-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 120px 120px 80px;
+    padding: 12px 20px;
+    border-bottom: 1px solid #f0f2f6;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.12s;
+    gap: 12px;
+  }
+  .apt-row:last-child { border-bottom: none; }
+  .apt-row:hover { background: var(--blue-light); }
+  .apt-row.header {
+    background: #fafbfc;
+    border-bottom: 1px solid var(--border);
+    cursor: default;
+    font-size: 11px; font-weight: 700; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .apt-row.header:hover { background: #fafbfc; }
+
+  .apt-time { font-size: 12.5px; font-weight: 700; color: var(--text); font-family: 'Lato', monospace; }
+  .apt-patient { font-size: 13px; color: var(--text); }
+  .apt-patient strong { font-weight: 700; }
+  .apt-patient span { font-size: 11.5px; color: var(--text3); display: block; margin-top: 1px; }
+
+  .flag-chip {
+    font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+    display: inline-block;
+  }
+  .flag-chip.urgent { background: #fff7ed; border: 1px solid #fed7aa; color: #c2410c; }
+  .flag-chip.none { color: var(--text3); font-weight: 400; }
+
+  .notes-chip {
+    font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px;
+    cursor: pointer;
+  }
+  .notes-chip.has-notes { background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-border); }
+  .notes-chip.no-notes { background: var(--bg); color: var(--text3); border: 1px solid var(--border); font-weight: 400; }
+
+  /* NOTES DRAWER */
+  .notes-drawer {
+    display: none;
+    background: #fefce8;
+    border-top: 1px solid #fde047;
+    padding: 14px 20px 16px;
+    animation: fadeUp 0.2s ease both;
+  }
+  .notes-drawer.open { display: block; }
+  .notes-drawer-header {
+    font-size: 11px; font-weight: 700; color: #92400e;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+  }
+  .notes-drawer-body {
+    font-size: 13px; line-height: 1.8; color: var(--text2);
+    background: white; border: 1px solid #fde047;
+    border-radius: 8px; padding: 12px 14px;
+    white-space: pre-wrap;
+  }
+  .supervisor-note-inline {
+    display: block; margin-top: 8px;
+    background: #fef9c3; border-left: 3px solid #eab308;
+    border-radius: 0 5px 5px 0; padding: 4px 10px 4px 8px;
+    font-size: 12.5px; color: #713f12; font-style: italic;
+  }
+  .supervisor-note-inline strong { font-style: normal; font-weight: 700; color: #92400e; }
+</style>
+</head>
+<body>
+
+<div class="topnav">
+  <div class="logo">ClearNote</div>
+  <div class="topnav-center">Daily Overview</div>
+  <div class="topnav-right">
+    <span class="date-badge">📅 Sunday, May 24, 2026</span>
+    <div class="avatar">JL</div>
+    Joel
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Today's Appointments</div>
+      <div class="page-sub">All clinicians · Click any row to read session notes</div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num">4</div>
+      <div class="stat-label">Clinicians on today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">14</div>
+      <div class="stat-label">Total appointments</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:#c2410c">3</div>
+      <div class="stat-label">Flagged for review</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--green)">11</div>
+      <div class="stat-label">Notes completed</div>
+    </div>
+  </div>
+
+  <!-- DR. RIVERA -->
+  <div class="clinician-section">
+    <div class="clinician-header" onclick="toggleClinician('rivera')">
+      <div class="clin-avatar" style="background:linear-gradient(135deg,#4f8ef7,#7c3aed)">SR</div>
+      <div class="clin-info">
+        <div class="clin-name">Dr. S. Rivera</div>
+        <div class="clin-meta">Psychiatric NP · 4 appointments today</div>
+      </div>
+      <div class="clin-stats">
+        <div class="clin-stat"><div class="n">4</div><div class="l">Apts</div></div>
+        <div class="clin-stat"><div class="n" style="color:#c2410c">1</div><div class="l">Flagged</div></div>
+        <div class="clin-stat"><div class="n" style="color:var(--green)">3</div><div class="l">Notes done</div></div>
+      </div>
+      <span class="status-chip session">● In Session</span>
+      <span class="chevron open" id="chev-rivera">›</span>
+    </div>
+    <div class="apt-table open" id="table-rivera">
+      <div class="apt-row header">
+        <div>Time</div><div>Patient</div><div>Notes</div><div>Flags</div><div></div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('rivera-1')">
+          <div class="apt-time">9:00 AM</div>
+          <div class="apt-patient"><strong>J. Morales</strong><span>Session #14</span></div>
+          <div><span class="notes-chip has-notes">📄 View Notes</span></div>
+          <div><span class="flag-chip urgent">⚡ High Priority</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer open" id="notes-rivera-1">
+          <div class="notes-drawer-header">📋 Rivera's Notes — J. Morales</div>
+          <div class="notes-drawer-body">Presenting: sleep disruption (~2 weeks), occupational stress re: new manager.
+Mental status: Alert, cooperative, mildly anxious. No SI/HI.
+Medications: Sertraline 100mg — compliant, no side effects.
+Assessment: Situational anxiety with sleep impact. Job security concern flagged.<span class="supervisor-note-inline"><strong>Joel said to:</strong> Ask next session — "How has this been affecting your mood day to day?" If anxiety escalates, revisit the treatment plan.</span>
+Plan: Continue medication. Follow up 2 weeks.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('rivera-2')">
+          <div class="apt-time">10:30 AM</div>
+          <div class="apt-patient"><strong>M. Patel</strong><span>Session #6</span></div>
+          <div><span class="notes-chip has-notes">📄 View Notes</span></div>
+          <div><span class="flag-chip none">None</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-rivera-2">
+          <div class="notes-drawer-header">📋 Rivera's Notes — M. Patel</div>
+          <div class="notes-drawer-body">Presenting: generalized anxiety, improving.
+Mental status: Calm, engaged, good insight. No SI/HI.
+Medications: Buspirone 10mg BID — compliant.
+Assessment: Meaningful improvement from last session. Patient reports using CBT techniques daily.
+Plan: Continue current plan. Schedule follow-up in 4 weeks.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('rivera-3')">
+          <div class="apt-time">12:00 PM</div>
+          <div class="apt-patient"><strong>T. Williams</strong><span>Session #2</span></div>
+          <div><span class="notes-chip has-notes">📄 View Notes</span></div>
+          <div><span class="flag-chip none">None</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-rivera-3">
+          <div class="notes-drawer-header">📋 Rivera's Notes — T. Williams</div>
+          <div class="notes-drawer-body">Presenting: adjustment disorder following job loss.
+Mental status: Mildly depressed affect, appropriate. No SI/HI.
+Medications: None currently.
+Assessment: Early stages of treatment. Building rapport. Patient open to therapy.
+Plan: Refer to CBT therapist. Follow up in 3 weeks.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('rivera-4')">
+          <div class="apt-time">2:14 PM</div>
+          <div class="apt-patient"><strong>D. Brooks</strong><span>Session #9 · In progress</span></div>
+          <div><span class="notes-chip no-notes">Pending</span></div>
+          <div><span class="flag-chip none">—</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-rivera-4">
+          <div class="notes-drawer-header">📋 Rivera's Notes — D. Brooks</div>
+          <div class="notes-drawer-body" style="color:var(--text3);font-style:italic">Session still in progress — notes not yet submitted.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DR. KIM -->
+  <div class="clinician-section">
+    <div class="clinician-header" onclick="toggleClinician('kim')">
+      <div class="clin-avatar" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">JK</div>
+      <div class="clin-info">
+        <div class="clin-name">Dr. J. Kim</div>
+        <div class="clin-meta">Psychiatric NP · 4 appointments today</div>
+      </div>
+      <div class="clin-stats">
+        <div class="clin-stat"><div class="n">4</div><div class="l">Apts</div></div>
+        <div class="clin-stat"><div class="n" style="color:#c2410c">1</div><div class="l">Flagged</div></div>
+        <div class="clin-stat"><div class="n" style="color:var(--green)">4</div><div class="l">Notes done</div></div>
+      </div>
+      <span class="status-chip done">✓ Done for day</span>
+      <span class="chevron" id="chev-kim">›</span>
+    </div>
+    <div class="apt-table" id="table-kim">
+      <div class="apt-row header">
+        <div>Time</div><div>Patient</div><div>Notes</div><div>Flags</div><div></div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('kim-1')">
+          <div class="apt-time">8:00 AM</div>
+          <div class="apt-patient"><strong>R. Okafor</strong><span>Session #7</span></div>
+          <div><span class="notes-chip has-notes">📄 View Notes</span></div>
+          <div><span class="flag-chip urgent">⚡ High Priority</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-kim-1">
+          <div class="notes-drawer-header">📋 Kim's Notes — R. Okafor</div>
+          <div class="notes-drawer-body">Presenting: depressive episode, passive SI verbalized.
+Mental status: Flat affect, poor eye contact. Passive SI — "what's the point anyway."
+Medications: Escitalopram 20mg — reports inconsistent compliance.
+Assessment: Concerning session. Passive ideation flagged for supervisor review.
+Plan: Increase session frequency to weekly. Safety plan reviewed and signed.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('kim-2')">
+          <div class="apt-time">10:00 AM</div>
+          <div class="apt-patient"><strong>L. Garcia</strong><span>Session #11</span></div>
+          <div><span class="notes-chip has-notes">📄 View Notes</span></div>
+          <div><span class="flag-chip none">None</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-kim-2">
+          <div class="notes-drawer-header">📋 Kim's Notes — L. Garcia</div>
+          <div class="notes-drawer-body">Presenting: PTSD, stable phase.
+Mental status: Calm, appropriate affect. No SI/HI.
+Medications: Prazosin 2mg QHS — compliant.
+Assessment: Stable. Sleep improving with prazosin.
+Plan: Continue current regimen. Follow up in 3 weeks.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('kim-3')">
+          <div class="apt-time">1:00 PM</div>
+          <div class="apt-patient"><strong>N. Russo</strong><span>Session #4</span></div>
+          <div><span class="notes-chip has-notes">📄 View Notes</span></div>
+          <div><span class="flag-chip none">None</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-kim-3">
+          <div class="notes-drawer-header">📋 Kim's Notes — N. Russo</div>
+          <div class="notes-drawer-body">Presenting: bipolar II, depressive phase improving.
+Mental status: Brighter affect than last visit. Energy returning.
+Medications: Lamotrigine 150mg — compliant.
+Assessment: Positive trajectory. No hypomanic features noted.
+Plan: Continue current dose. Psychoeducation on sleep hygiene. Follow up 4 weeks.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('kim-4')">
+          <div class="apt-time">3:00 PM</div>
+          <div class="apt-patient"><strong>S. Nguyen</strong><span>Session #1 · Intake</span></div>
+          <div><span class="notes-chip has-notes">📄 View Notes</span></div>
+          <div><span class="flag-chip none">None</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-kim-4">
+          <div class="notes-drawer-header">📋 Kim's Notes — S. Nguyen</div>
+          <div class="notes-drawer-body">Intake session. Patient self-referred for anxiety and low mood.
+Mental status: Nervous presentation, cooperative. No SI/HI.
+Medications: None currently.
+Assessment: Likely GAD with depressive features. Awaiting full evaluation.
+Plan: Full psychiatric evaluation next session. PHQ-9 and GAD-7 administered.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DR. TORRES -->
+  <div class="clinician-section">
+    <div class="clinician-header" onclick="toggleClinician('torres')">
+      <div class="clin-avatar" style="background:linear-gradient(135deg,#22c55e,#4f8ef7)">AT</div>
+      <div class="clin-info">
+        <div class="clin-name">Dr. A. Torres</div>
+        <div class="clin-meta">Psychiatric NP · 3 appointments today</div>
+      </div>
+      <div class="clin-stats">
+        <div class="clin-stat"><div class="n">3</div><div class="l">Apts</div></div>
+        <div class="clin-stat"><div class="n">0</div><div class="l">Flagged</div></div>
+        <div class="clin-stat"><div class="n" style="color:var(--green)">2</div><div class="l">Notes done</div></div>
+      </div>
+      <span class="status-chip away">● Away</span>
+      <span class="chevron" id="chev-torres">›</span>
+    </div>
+    <div class="apt-table" id="table-torres">
+      <div class="apt-row header">
+        <div>Time</div><div>Patient</div><div>Notes</div><div>Flags</div><div></div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('torres-1')">
+          <div class="apt-time">9:30 AM</div>
+          <div class="apt-patient"><strong>M. Santos</strong><span>Session #5</span></div>
+          <div><span class="notes-chip has-notes">📄 View Notes</span></div>
+          <div><span class="flag-chip none">None</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-torres-1">
+          <div class="notes-drawer-header">📋 Torres's Notes — M. Santos</div>
+          <div class="notes-drawer-body">Presenting: OCD, maintenance phase.
+Mental status: Calm, organized thinking. No SI/HI.
+Medications: Fluvoxamine 100mg BID — compliant.
+Assessment: Stable. ERP therapy progressing well.
+Plan: Continue current plan. Follow up 4 weeks.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('torres-2')">
+          <div class="apt-time">11:30 AM</div>
+          <div class="apt-patient"><strong>C. Park</strong><span>Session #8</span></div>
+          <div><span class="notes-chip has-notes">📄 View Notes</span></div>
+          <div><span class="flag-chip none">None</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-torres-2">
+          <div class="notes-drawer-header">📋 Torres's Notes — C. Park</div>
+          <div class="notes-drawer-body">Presenting: ADHD, adult — medication management.
+Mental status: Distractible but cooperative. No SI/HI.
+Medications: Adderall XR 20mg — reports wearing off by 3 PM.
+Assessment: Possible dose adjustment needed.
+Plan: Trial Adderall XR 25mg. Follow up in 2 weeks to assess.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('torres-3')">
+          <div class="apt-time">1:30 PM</div>
+          <div class="apt-patient"><strong>F. Diaz</strong><span>Session #3</span></div>
+          <div><span class="notes-chip no-notes">Pending</span></div>
+          <div><span class="flag-chip none">—</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-torres-3">
+          <div class="notes-drawer-header">📋 Torres's Notes — F. Diaz</div>
+          <div class="notes-drawer-body" style="color:var(--text3);font-style:italic">Notes not yet submitted.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DR. LIN -->
+  <div class="clinician-section">
+    <div class="clinician-header" onclick="toggleClinician('lin')">
+      <div class="clin-avatar" style="background:linear-gradient(135deg,#a78bfa,#f472b6)">PL</div>
+      <div class="clin-info">
+        <div class="clin-name">Dr. P. Lin</div>
+        <div class="clin-meta">Psychiatric NP · 3 appointments today</div>
+      </div>
+      <div class="clin-stats">
+        <div class="clin-stat"><div class="n">3</div><div class="l">Apts</div></div>
+        <div class="clin-stat"><div class="n" style="color:#c2410c">1</div><div class="l">Flagged</div></div>
+        <div class="clin-stat"><div class="n" style="color:var(--green)">2</div><div class="l">Notes done</div></div>
+      </div>
+      <span class="status-chip done">✓ Done for day</span>
+      <span class="chevron" id="chev-lin">›</span>
+    </div>
+    <div class="apt-table" id="table-lin">
+      <div class="apt-row header">
+        <div>Time</div><div>Patient</div><div>Notes</div><div>Flags</div><div></div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('lin-1')">
+          <div class="apt-time">8:30 AM</div>
+          <div class="apt-patient"><strong>A. Chen</strong><span>Session #12 — No show</span></div>
+          <div><span class="notes-chip has-notes">📄 View Notes</span></div>
+          <div><span class="flag-chip urgent">⚡ High Priority</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-lin-1">
+          <div class="notes-drawer-header">📋 Lin's Notes — A. Chen</div>
+          <div class="notes-drawer-body">Patient did not show for second consecutive appointment. No advance notice given.
+History: Previously stable, MDD maintenance phase.
+Action taken: Attempted to reach patient by phone — no answer. Left voicemail.
+Assessment: Concerning pattern. Two missed sessions warrants follow-up.<span class="supervisor-note-inline"><strong>Jake said to:</strong> Give it one more missed session then send a check-in message through the portal. Flag me if no response in 48 hours.</span>
+Plan: Portal message sent. Await response within 48 hours.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('lin-2')">
+          <div class="apt-time">11:00 AM</div>
+          <div class="apt-patient"><strong>B. Harmon</strong><span>Session #3</span></div>
+          <div><span class="notes-chip has-notes">📄 View Notes</span></div>
+          <div><span class="flag-chip none">None</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-lin-2">
+          <div class="notes-drawer-header">📋 Lin's Notes — B. Harmon</div>
+          <div class="notes-drawer-body">Presenting: social anxiety disorder.
+Mental status: Anxious presentation, improving. No SI/HI.
+Medications: Sertraline 50mg — compliant, tolerating well.
+Assessment: Early improvement. Patient engaged in treatment.
+Plan: Increase Sertraline to 75mg. CBT referral placed. Follow up 3 weeks.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="apt-row" onclick="toggleNotes('lin-3')">
+          <div class="apt-time">2:00 PM</div>
+          <div class="apt-patient"><strong>V. Morris</strong><span>Session #6</span></div>
+          <div><span class="notes-chip no-notes">Pending</span></div>
+          <div><span class="flag-chip none">—</span></div>
+          <div style="font-size:12px;color:var(--text3)">›</div>
+        </div>
+        <div class="notes-drawer" id="notes-lin-3">
+          <div class="notes-drawer-header">📋 Lin's Notes — V. Morris</div>
+          <div class="notes-drawer-body" style="color:var(--text3);font-style:italic">Notes not yet submitted.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function toggleClinician(id) {
+    const table = document.getElementById('table-' + id);
+    const chev = document.getElementById('chev-' + id);
+    const isOpen = table.classList.contains('open');
+    table.classList.toggle('open', !isOpen);
+    chev.classList.toggle('open', !isOpen);
+  }
+
+  function toggleNotes(id) {
+    const drawer = document.getElementById('notes-' + id);
+    drawer.classList.toggle('open');
+  }
+</script>
+
+</body>
+</html>
