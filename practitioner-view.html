@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClearNote — Practitioner</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f4f6f9;
+    --white: #fff;
+    --border: #dde1ea;
+    --blue: #2563eb;
+    --blue-light: #eff4ff;
+    --blue-border: #bfcfff;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --text: #1e2330;
+    --text2: #4b5563;
+    --text3: #9ca3af;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.13);
+  }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+  }
+  .logo { font-family: 'Merriweather', serif; font-size: 17px; color: var(--blue); font-weight: 700; }
+  .topbar-center { font-size: 13px; color: var(--text2); display: flex; align-items: center; gap: 8px; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.4} }
+  .topbar-user { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg,#4f8ef7,#7c3aed); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+
+  /* MAIN GRID */
+  .main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 240px 1fr 1fr;
+    grid-template-rows: 1fr 280px;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .panel:nth-child(3) { border-right: none; }
+  .panel:nth-child(4) { border-right: 1px solid var(--border); border-bottom: none; }
+  .panel:nth-child(5) { border-right: none; border-bottom: none; }
+  .inbox-sidebar {
+    grid-row: 1 / 3;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+    background: var(--white);
+  }
+
+  .panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: #fafbfc;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .panel-title { font-family: 'Merriweather', serif; font-size: 14px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .panel-body { flex: 1; overflow-y: auto; padding: 14px 16px; }
+  .panel-body::-webkit-scrollbar { width: 3px; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* BUTTONS */
+  .btn { padding: 6px 13px; border-radius: 6px; font-size: 12px; font-weight: 700; font-family: 'Lato', sans-serif; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-blue { background: var(--blue); color: white; }
+  .btn-blue:hover { background: #1d4ed8; }
+  .btn-outline { background: white; border: 1px solid var(--border); color: var(--text2); }
+  .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+  .btn-red { background: #dc2626; color: white; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+  /* RECORD */
+  .record-zone {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    text-align: center;
+    margin-bottom: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .record-zone:hover { border-color: var(--blue); background: var(--blue-light); }
+  .record-btn { width: 44px; height: 44px; border-radius: 50%; background: #fee2e2; border: 2px solid #fca5a5; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 20px; cursor: pointer; transition: transform 0.15s; }
+  .record-btn:hover { transform: scale(1.06); }
+  .record-label { font-size: 12.5px; color: var(--text2); font-weight: 700; }
+  .record-sub { font-size: 11px; color: var(--text3); }
+
+  .session-bar {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    margin-bottom: 12px; padding: 7px 11px;
+    background: var(--blue-light); border: 1px solid var(--blue-border);
+    border-radius: 7px; font-size: 12px; color: var(--blue); font-weight: 700;
+  }
+  .session-bar span { color: var(--text2); font-weight: 400; }
+
+  /* TRANSCRIPT BLOCKS */
+  .t-block { margin-bottom: 12px; }
+  .t-time { font-size: 10.5px; color: var(--text3); font-weight: 700; margin-bottom: 4px; }
+  .t-text {
+    font-size: 13px; line-height: 1.75; color: var(--text2);
+    border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px;
+    background: white; cursor: text; user-select: text;
+  }
+  .t-text:hover { border-color: #c7d2fe; }
+
+  /* TAGGED INLINE */
+  .tagged-span {
+    background: #fef9c3;
+    border-bottom: 2px solid #eab308;
+    border-radius: 2px;
+    padding: 0 2px;
+    cursor: pointer;
+    position: relative;
+  }
+  .tag-pill {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10.5px; padding: 1px 7px; border-radius: 20px;
+    background: #ede9fe; border: 1px solid #c4b5fd; color: #6d28d9;
+    margin-left: 5px; font-weight: 700; cursor: pointer; vertical-align: middle;
+  }
+
+  /* NOTES TEXTAREA */
+  .notes-area {
+    width: 100%; height: 100%; min-height: 180px;
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; font-size: 13px; font-family: 'Lato', sans-serif;
+    line-height: 1.75; resize: none; color: var(--text); outline: none;
+    transition: border-color 0.2s; background: white;
+  }
+  .notes-area:focus { border-color: var(--blue); }
+  .notes-area::placeholder { color: var(--text3); }
+
+  .tag-inline {
+    display: inline-block;
+    background: #fef9c3; border-left: 3px solid #eab308;
+    border-radius: 0 4px 4px 0; padding: 2px 8px 2px 6px;
+    font-size: 12px; color: #713f12; font-style: italic; margin: 3px 0;
+  }
+  .tag-inline strong { font-style: normal; font-weight: 700; color: #92400e; }
+
+  /* INBOX PANEL */
+  .inbox-empty { text-align: center; padding: 24px 16px; color: var(--text3); font-size: 13px; }
+  .inbox-empty .icon { font-size: 28px; margin-bottom: 8px; }
+
+  .inbox-thread {
+    border: 1px solid var(--border); border-radius: 8px;
+    margin-bottom: 10px; overflow: hidden; background: white;
+  }
+  .inbox-thread-header {
+    padding: 10px 13px; display: flex; align-items: flex-start;
+    gap: 9px; cursor: pointer; transition: background 0.12s;
+    border-bottom: 1px solid var(--border);
+  }
+  .inbox-thread-header:hover { background: var(--blue-light); }
+  .thread-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; flex-shrink: 0; margin-top: 1px; }
+  .thread-info { flex: 1; min-width: 0; }
+  .thread-from { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; display: flex; align-items: center; gap: 7px; }
+  .thread-context { font-size: 11.5px; color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-style: italic; }
+  .thread-time { font-size: 11px; color: var(--text3); flex-shrink: 0; }
+
+  .unread-badge { width: 7px; height: 7px; border-radius: 50%; background: var(--blue); flex-shrink: 0; margin-top: 6px; }
+
+  .thread-reply {
+    padding: 10px 13px; background: #fefce8;
+    border-left: 3px solid #eab308;
+  }
+  .reply-from { font-size: 11px; font-weight: 700; color: #92400e; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .reply-text { font-size: 13px; line-height: 1.65; color: var(--text2); }
+
+  .hipri { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 20px; background: #fff7ed; border: 1px solid #fed7aa; color: #c2410c; }
+
+  /* TAG POPUP MODAL */
+  .tag-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.25);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .tag-overlay.open { display: flex; }
+
+  .tag-popup {
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    width: 380px;
+    overflow: hidden;
+    animation: popIn 0.18s ease both;
+  }
+  @keyframes popIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+
+  .popup-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    background: #fafbfc;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .popup-title { font-family: 'Merriweather', serif; font-size: 14px; font-weight: 700; color: var(--text); }
+  .popup-close { font-size: 18px; color: var(--text3); cursor: pointer; line-height: 1; }
+  .popup-close:hover { color: var(--text); }
+
+  .popup-body { padding: 14px 16px; }
+
+  .popup-context {
+    background: #fef9c3; border-left: 3px solid #eab308;
+    border-radius: 0 6px 6px 0; padding: 7px 10px;
+    font-size: 12px; color: #713f12; font-style: italic;
+    margin-bottom: 12px; line-height: 1.55;
+  }
+
+  .tag-to-row {
+    display: flex; gap: 8px; margin-bottom: 12px;
+  }
+  .tag-person {
+    flex: 1; padding: 8px 12px;
+    border: 2px solid var(--border); border-radius: 8px;
+    cursor: pointer; text-align: center; transition: all 0.15s;
+    font-size: 13px; font-weight: 700; color: var(--text2);
+  }
+  .tag-person:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+  .tag-person.selected { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+  .tag-person .p-name { font-size: 13px; font-weight: 700; }
+  .tag-person .p-role { font-size: 11px; color: var(--text3); font-weight: 400; margin-top: 1px; }
+  .tag-person.selected .p-role { color: var(--blue); opacity: 0.7; }
+
+  .popup-label { font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+
+  .popup-textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 7px;
+    padding: 10px 12px; font-size: 13px; font-family: 'Lato', sans-serif;
+    line-height: 1.65; resize: none; min-height: 80px;
+    color: var(--text); outline: none; transition: border-color 0.2s;
+    margin-bottom: 12px;
+  }
+  .popup-textarea:focus { border-color: var(--blue); }
+  .popup-textarea::placeholder { color: var(--text3); }
+
+  .urgency-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .urg-opt {
+    font-size: 11.5px; padding: 5px 12px; border-radius: 20px;
+    border: 1px solid var(--border); cursor: pointer; font-weight: 700;
+    transition: all 0.15s; background: white; color: var(--text2); font-family: 'Lato', sans-serif;
+  }
+  .urg-opt.sel-normal { border-color: #bbf7d0; color: var(--green); background: var(--green-light); }
+  .urg-opt.sel-urgent { border-color: #fed7aa; color: #c2410c; background: #fff7ed; }
+
+  .popup-footer { display: flex; justify-content: flex-end; gap: 8px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">ClearNote</div>
+  <div class="topbar-center">
+    <div class="live-dot"></div>
+    Session in progress — Patient #4821
+  </div>
+  <div class="topbar-user">
+    <div class="avatar">SR</div>
+    Dr. Rivera
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- SIDEBAR: INBOX spanning full height -->
+  <div class="inbox-sidebar">
+    <div class="panel-header">
+      <div class="panel-title">
+        Inbox
+        <span style="font-size:10px;font-weight:700;background:var(--blue);color:white;border-radius:20px;padding:1px 7px">1 new</span>
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <!-- Patient: J. Morales — Joel replied -->
+      <div class="inbox-thread">
+        <div class="inbox-thread-header">
+          <div class="thread-info">
+            <div class="thread-from">
+              J. Morales
+              <span class="hipri">High Priority</span>
+              <div class="unread-badge"></div>
+            </div>
+            <div class="thread-context">"...concern about job security — tone shifted..."</div>
+            <div style="font-size:11px;font-weight:700;color:var(--green);margin-top:3px">✓ Joel replied</div>
+          </div>
+          <div class="thread-time">2:45 PM</div>
+        </div>
+        <div class="thread-reply">
+          <div class="reply-from">Joel said</div>
+          <div class="reply-text">Ask directly next session: "How has this been affecting your mood and daily functioning?" If anxiety escalates, we may need to revisit the plan.</div>
+        </div>
+      </div>
+
+      <!-- Patient: J. Morales — Jake awaiting -->
+      <div class="inbox-thread">
+        <div class="inbox-thread-header">
+          <div class="thread-info">
+            <div class="thread-from">J. Morales</div>
+            <div class="thread-context">"...sertraline 100mg — adjust if no improvement?"</div>
+            <div style="font-size:11px;font-weight:700;color:#c2410c;margin-top:3px">⚡ Jake — awaiting reply</div>
+          </div>
+          <div class="thread-time">2:31 PM</div>
+        </div>
+      </div>
+
+      <!-- Patient: A. Chen — Jake replied -->
+      <div class="inbox-thread">
+        <div class="inbox-thread-header">
+          <div class="thread-info">
+            <div class="thread-from">A. Chen</div>
+            <div class="thread-context">"...missed second session, should I reach out?"</div>
+            <div style="font-size:11px;font-weight:700;color:var(--green);margin-top:3px">✓ Jake replied</div>
+          </div>
+          <div class="thread-time">Mon</div>
+        </div>
+        <div class="thread-reply">
+          <div class="reply-from">Jake said</div>
+          <div class="reply-text">Give it one more missed session then send a check-in message through the portal. Flag me if no response in 48 hours.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOP LEFT: TRANSCRIPT -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Session Transcript</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm">Upload</button>
+        <button class="btn btn-red btn-sm">● Record</button>
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <div class="record-zone">
+        <div class="record-btn">🎙</div>
+        <div class="record-label">Tap to start recording</div>
+        <div class="record-sub">Transcribed automatically</div>
+      </div>
+
+      <div class="session-bar">Patient #4821 &nbsp;·&nbsp; <span>Today 2:14 PM</span> &nbsp;·&nbsp; <span>● Transcribing</span></div>
+
+      <div class="t-block">
+        <div class="t-time">0:00 — 0:43</div>
+        <div class="t-text">Patient arrived on time. Reported feeling "a bit better" but noted difficulty sleeping for the past two weeks — waking at 3–4 AM consistently.</div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-time">0:44 — 1:52</div>
+        <div class="t-text">
+          Discussed workplace stress. Patient describes new manager as "unpredictable."
+          <span class="tagged-span" onclick="openPopupFromTag(this)">Expressed concern about job security — tone shifted significantly.</span>
+          <span class="tag-pill" onclick="openPopupFromTag(this)">@Joel ↗</span>
+        </div>
+      </div>
+
+      <div class="t-block">
+        <div class="t-time">1:53 — 2:31</div>
+        <div class="t-text" onmouseup="handleSelection(this)">Medication review: patient confirms sertraline 100mg daily. Denies side effects. Plan to continue current regimen and reassess at next visit.</div>
+      </div>
+
+      <div style="margin-top:10px;padding:10px 12px;background:var(--blue-light);border:1px solid var(--blue-border);border-radius:7px;font-size:12px;color:var(--text2)">
+        💡 <strong>Tip:</strong> Select any text in the transcript or your notes, then @tag Joel or Jake with a question.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOP RIGHT: MY NOTES -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">My Session Notes</div>
+      <button class="btn btn-blue btn-sm">Save</button>
+    </div>
+    <div class="panel-body" style="display:flex;flex-direction:column;gap:10px">
+
+      <div style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:0.5px">Select text below to @tag Joel or Jake</div>
+
+      <div style="flex:1;display:flex;flex-direction:column;gap:0">
+        <div style="background:white;border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.85;color:var(--text2);flex:1;cursor:text;user-select:text" onmouseup="handleSelection(this)">
+          <div>Presenting: sleep disruption (~2 weeks), occupational stress re: new manager.</div>
+          <div>Mental status: Alert, cooperative, mildly anxious. No SI/HI.</div>
+          <div>Medications: Sertraline 100mg — compliant, no side effects.</div>
+          <div style="margin-top:6px">Assessment: Situational anxiety with sleep impact.</div>
+          <div class="tag-inline" style="display:block;margin:4px 0"><strong>@Joel:</strong> Should I adjust the plan if this escalates next session, or just monitor? — <em>Joel said to: Ask directly how it's affecting daily functioning. Revisit plan if it escalates.</em></div>
+          <div style="margin-top:6px">Plan: Continue medication. Follow up 2 weeks.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOTTOM RIGHT: PLACEHOLDER / MEDS -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">Current Medications <span style="font-size:10px;font-weight:400;color:var(--text3);font-family:'Lato',sans-serif">via DrChrono</span></div>
+      <button class="btn btn-outline btn-sm">Refresh</button>
+    </div>
+    <div class="panel-body">
+      <div style="background:white;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px;background:#fafbfc;border-bottom:1px solid var(--border)">
+          <div>Medication</div><div>Dose</div><div>Status</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;font-size:13px;padding:9px 12px;border-bottom:1px solid #f0f2f6;color:var(--text2)">
+          <div style="font-weight:700;color:var(--text)">Sertraline</div>
+          <div>100mg daily</div>
+          <div><span style="background:var(--green-light);color:var(--green);border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700">Active</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;font-size:13px;padding:9px 12px;color:var(--text2)">
+          <div style="font-weight:700;color:var(--text)">Lorazepam</div>
+          <div>0.5mg PRN</div>
+          <div><span style="background:var(--amber-light);color:var(--amber);border-radius:20px;padding:1px 8px;font-size:11px;font-weight:700">PRN</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;font-size:12px;color:var(--text3);text-align:center;padding:8px">
+        Last synced from DrChrono · Today 2:10 PM
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TAG POPUP OVERLAY -->
+<div class="tag-overlay" id="tag-overlay" onclick="closePopupOutside(event)">
+  <div class="tag-popup">
+    <div class="popup-header">
+      <div class="popup-title">Tag a supervisor</div>
+      <div class="popup-close" onclick="closePopup()">×</div>
+    </div>
+    <div class="popup-body">
+
+      <div class="popup-label">Selected text</div>
+      <div class="popup-context" id="popup-context">"Expressed concern about job security — tone shifted significantly."</div>
+
+      <div class="popup-label">Tag</div>
+      <div class="tag-to-row">
+        <div class="tag-person" id="tag-joel" onclick="selectPerson('joel')">
+          <div class="p-name">@Joel</div>
+          <div class="p-role">Psychiatric NP</div>
+        </div>
+        <div class="tag-person" id="tag-jake" onclick="selectPerson('jake')">
+          <div class="p-name">@Jake</div>
+          <div class="p-role">Pharmacist</div>
+        </div>
+      </div>
+
+      <div class="popup-label">Your question</div>
+      <textarea class="popup-textarea" id="popup-question" placeholder="What do you want to ask them about this?"></textarea>
+
+      <div class="popup-label">Priority</div>
+      <div class="urgency-row">
+        <button class="urg-opt sel-normal" id="urg-normal" onclick="selectUrgency('normal')">🟢 Regular</button>
+        <button class="urg-opt" id="urg-urgent" onclick="selectUrgency('urgent')">⚡ High Priority</button>
+      </div>
+
+      <div class="popup-footer">
+        <button class="btn btn-outline" onclick="closePopup()">Cancel</button>
+        <button class="btn btn-blue" onclick="sendTag()">Send Tag</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SENT TOAST -->
+<div id="toast" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e2330;color:white;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:700;z-index:300;animation:fadeUp 0.2s ease">
+  ✓ Tag sent to supervisor's inbox
+</div>
+
+<script>
+  let selectedText = '';
+  let selectedPerson = 'joel';
+  let selectedUrgency = 'normal';
+
+  function handleSelection(el) {
+    const sel = window.getSelection();
+    if (!sel || sel.toString().trim().length < 4) return;
+    selectedText = sel.toString().trim();
+    openPopup(selectedText);
+  }
+
+  function openPopup(text) {
+    document.getElementById('popup-context').textContent = '"' + (text || 'Selected text') + '"';
+    document.getElementById('popup-question').value = '';
+    document.getElementById('tag-overlay').classList.add('open');
+    selectedPerson = 'joel';
+    selectedUrgency = 'normal';
+    document.getElementById('tag-joel').classList.add('selected');
+    document.getElementById('tag-jake').classList.remove('selected');
+    document.getElementById('urg-normal').className = 'urg-opt sel-normal';
+    document.getElementById('urg-urgent').className = 'urg-opt';
+    setTimeout(() => document.getElementById('popup-question').focus(), 100);
+  }
+
+  function openPopupFromTag(el) {
+    openPopup('Expressed concern about job security — tone shifted significantly.');
+  }
+
+  function closePopup() {
+    document.getElementById('tag-overlay').classList.remove('open');
+  }
+
+  function closePopupOutside(e) {
+    if (e.target === document.getElementById('tag-overlay')) closePopup();
+  }
+
+  function selectPerson(p) {
+    selectedPerson = p;
+    document.getElementById('tag-joel').classList.toggle('selected', p === 'joel');
+    document.getElementById('tag-jake').classList.toggle('selected', p === 'jake');
+  }
+
+  function selectUrgency(u) {
+    selectedUrgency = u;
+    document.getElementById('urg-normal').className = u === 'normal' ? 'urg-opt sel-normal' : 'urg-opt';
+    document.getElementById('urg-urgent').className = u === 'urgent' ? 'urg-opt sel-urgent' : 'urg-opt';
+  }
+
+  function sendTag() {
+    closePopup();
+    const toast = document.getElementById('toast');
+    toast.style.display = 'block';
+    setTimeout(() => toast.style.display = 'none', 2500);
+    window.getSelection && window.getSelection().removeAllRanges();
+  }
+</script>
+
+</body>
+</html>
